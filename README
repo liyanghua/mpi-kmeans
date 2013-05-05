@@ -1,0 +1,24 @@
+Currently, only support ASCII format.
+1. Data format, each object occupies one line. each line contains feature values.
+f1 \t f2 \t ... fn \n
+2. Implementation Notes:
+2.1 Master reads the file, computes the number of objects and number of features. Broadcasts the two numbers
+to others node. Note that, master allocats memory for all the objects, in practice, this is not acceptable.(Need to improve
+it later)
+2.2 Master distributes the data to other node. If we have N objects and M nodes, each node with rank < N % M will receive
+N/M + 1 objects and the other nodes will receive N/M objects. Mater will keep N/M + 1 objects.
+2.3 Each node including master will allocate memory for the data
+2.4 Master will pick the first number_of_clusters of objects as the init cluster center. And these objects(init center will
+be distributed to all the others nodes.
+2.5 And then, each node does the same thing as follows:
+2.5.1 init the membership, i.e., object belongs to which cluter center, as the init step, all objects will be assigned to
+the same cluter with id -1(None)
+2.5.2 allocate memory for an array which holdes the no. objects for each new cluter
+2.5.3 then for each object:
+      1) find the nearest cluter center(each node contains all the clusters)
+      2) check the membership, i.e., does this object belongs to a new cluter compared with last step? If the membership
+         changed, then update the membership, also increase the delta by 1:delta += 1.0
+      3) update the cluter center, sum the feature values
+      4) sum all data objects in newClusters
+      5) average the sum and replace old cluster centers with newClusters
+      6) average the delta, if delta > threshold then break
